@@ -10,7 +10,7 @@ touch test.asm
 sictools.jar要放在跟code相同資料夾
 寫好後在終端機下指令
 ```
-java -jar sictools.jar test.asm
+java -jar sictools.jar test.asm //最後為code檔名
 ```
 
 若要輸入device，建立跟裝置相同名稱的檔案，副檔名為dev
