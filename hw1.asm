@@ -4,7 +4,7 @@ INLOOP  TD    INDEV   // 測試輸入裝置
         LDA COUNT
         SUB ONE
         STA COUNT
-	JSUB  WRITE// 讀一個字元進入A暫存器
+	JSUB  WRITE
 .
 .
 READ	LDX   ZREO
