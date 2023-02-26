@@ -1,9 +1,9 @@
 INLOOP  TD    INDEV   // 測試輸入裝置
         JEQ   INLOOP  // 迴圈直到輸入裝置準備好
 	JSUB  READ
-        LDA COUNT
-        SUB ONE
-        STA COUNT
+        LDA   COUNT
+        SUB   ONE
+        STA   COUNT
 	JSUB  WRITE
 .
 .
@@ -44,8 +44,8 @@ ZREO   WORD 0
 FIVE   WORD 5
 LOWER  WORD 96
 UTL    WORD 32
-COUNT WORD 0
-ONE WORD 1
-ENDSS WORD 36
-INDEX WORD 0
-ZZ WORD 0
+COUNT  WORD 0
+ONE    WORD 1
+ENDSS  WORD 36
+INDEX  WORD 0
+ZZ     WORD 0
