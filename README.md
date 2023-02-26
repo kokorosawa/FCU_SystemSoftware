@@ -1,4 +1,4 @@
-# SIC_Course
+# SystemSoftware_Course
 先建立要寫code的檔案
 副檔名為.asm
 ```
