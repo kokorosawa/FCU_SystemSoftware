@@ -18,3 +18,6 @@ java -jar sictools.jar test.asm //最後為code檔名
 touch F1.dev
 ```
 並在檔案內寫入內容
+<br>
+<br>
+輸出結果在05.dev
