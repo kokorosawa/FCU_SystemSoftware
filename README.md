@@ -5,9 +5,7 @@
 touch test.asm
 ```
 或是用編輯器建立
-
-
-
+<br>
 sictools.jar要放在跟code相同資料夾
 寫好後在終端機下指令
 ```
