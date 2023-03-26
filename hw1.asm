@@ -1,5 +1,5 @@
-INLOOP  TD    INDEV   // 測試輸入裝置
-        JEQ   INLOOP  // 迴圈直到輸入裝置準備好
+INLOOP  TD    INDEV   
+        JEQ   INLOOP  
 	JSUB  READ
         LDA   COUNT
         SUB   ONE
@@ -9,7 +9,7 @@ INLOOP  TD    INDEV   // 測試輸入裝置
 .
 READ	LDX   ZREO
 RLOOP	RD    INDEV
-        STCH  DATA, X 	// 把A暫存器的字元存入DATA
+        STCH  DATA, X 	
 	LDA   COUNT
 	ADD   ONE
         STA   COUNT
@@ -28,6 +28,8 @@ WRITE	LDX  ZZ
 WLOOP   LDCH DATA, X
 	COMP LOWER
 	JGT  W
+        COMP NUM
+        JLT  W
 	ADD  UTL
 W	WD   OUTDEV
 	TIX  COUNT
@@ -37,8 +39,9 @@ W	WD   OUTDEV
 .
 .
 .
-INDEV  BYTE X'F1'   // 輸入裝置代號F1
-OUTDEV BYTE X'05'   // 輸出裝置代號05
+NUM    WORD 58
+INDEV  BYTE X'F1'  
+OUTDEV BYTE X'F2'   
 DATA   RESB 10
 ZREO   WORD 0
 FIVE   WORD 5
