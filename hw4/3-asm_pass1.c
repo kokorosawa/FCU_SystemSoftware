@@ -306,7 +306,7 @@ int main(int argc, char *argv[])
 			for(line_count = 1 ; (c = process_line(&line)) != LINE_EOF; line_count++)
 			{	
 				if(line.code == OP_START){
-					locctr = atoi(line.operand1);
+					locctr = strtol(line.operand1, NULL, 16);
 				}
 				if(check_start != OP_START)
 					locctr = LOCCTR(last_line, locctr,c);
@@ -360,7 +360,8 @@ int main(int argc, char *argv[])
 				check_start = line.code;
 				last_line = line;
 			}
-			
+			printf(".\n");
+			printf(".\n");
 			printf("Program length = %x\n",end - start);
 			for(int i = 0 ; i < symtab_index; i++){
 				printf("%12s %06X\n",SYMTAB[i].label,SYMTAB[i].locctr);

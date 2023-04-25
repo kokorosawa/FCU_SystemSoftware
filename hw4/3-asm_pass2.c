@@ -32,7 +32,6 @@ typedef struct
 	unsigned	code;
 	unsigned	fmt;
 	unsigned	addressing;
-	char 		addressmode;
 } LINE;
 
 typedef struct
@@ -40,6 +39,12 @@ typedef struct
 	char		label[LEN_SYMBOL];
 	unsigned	locctr;
 } SYMBOL;
+
+typedef struct
+{
+	char		op[LEN_SYMBOL];
+	char        bin[8];
+} HtoB;
 
 int process_line(LINE *line);
 /* return LINE_EOF, LINE_COMMENT, LINE_ERROR, LINE_CORRECT and Instruction information in *line*/
@@ -224,7 +229,8 @@ int process_line(LINE *line)
 							}
 							else if((c == 1) && (buf[0] == 'x' || buf[0] == 'X'))
 							{
-								line->addressing = line->addressing | ADDR_INDEX;
+								line->addressing =  ADDR_INDEX;
+                                // printf("ADDR_INDEX");
 								ret = LINE_CORRECT;
 								state = 7;		/* skip following tokens in the line */
 							}
@@ -281,6 +287,67 @@ int LOCCTR(LINE line,int locctr, int c){
 	return locctr;
 }
 
+
+
+void objectcode(LINE line){
+    char ojc[32];
+    unsigned tempcode = line.code;
+    if(line.code == OP_RESB || line.code == OP_RESW || line.code == OP_BASE 
+    || line.code == OP_NOBASE || line.code == OP_START || line.code == OP_END){
+        ojc[0] = '\0';
+    }
+    else if(line.code == OP_WORD || line.code == OP_BYTE){
+        ojc[0] = '\0';
+    }else{
+        int hex[2];
+        char set[] = "0123456789ABCDEF";
+        hex[0] = tempcode/16;
+        tempcode = tempcode % 16;
+        hex[1] = tempcode;
+        
+        int hexfirst = hex[0];
+        for(int i = 3; i >= 0; i--){
+            ojc[i] = set[hexfirst % 2];
+            hexfirst /= 2;
+        }
+
+        int hexsec = hex[1];
+        for(int i = 7; i >= 4; i--){
+            ojc[i] = set[hexsec % 2];
+            hexsec /= 2;
+        }//n i x b p e
+         //6 7 8 9 10 11
+
+        if(line.addressing == ADDR_SIMPLE){
+            ojc[6] = '1';
+            ojc[7] = '1';
+            ojc[8] = '0';
+        }else if(line.addressing == ADDR_IMMEDIATE){
+            ojc[6] = '0';
+            ojc[7] = '1';
+            ojc[8] = '0';
+        }else if(line.addressing == ADDR_INDIRECT){
+            ojc[6] = '1';
+            ojc[7] = '0';
+            ojc[8] = '0';
+        }else if(line.addressing == ADDR_INDEX){
+            ojc[6] = '1';
+            ojc[7] = '1';
+            ojc[8] = '1';
+        }else{
+            ojc[6] = '0';
+            ojc[7] = '0';
+            ojc[8] = '0';
+        }
+        
+
+        ojc[9] = '\0';
+        // printf("%d%d  %s %02x\n",hex[0],hex[1], ojc, line.addressing);
+        printf("%s %02x\n", ojc, line.addressing);
+
+    }
+}
+
 int main(int argc, char *argv[])
 {
 	int			i, c, line_count;
@@ -290,8 +357,8 @@ int main(int argc, char *argv[])
 	SYMBOL		SYMTAB[100];
 	int symtab_index = 0;
 	int locctr = 0;
-	unsigned start;
-	unsigned end;
+	long start;
+	long end;
 
 	if(argc < 2)
 	{
@@ -305,63 +372,67 @@ int main(int argc, char *argv[])
 		{	unsigned check_start;
 			for(line_count = 1 ; (c = process_line(&line)) != LINE_EOF; line_count++)
 			{	
-				if(line.code == OP_START){
-					locctr = atoi(line.operand1);
-				}
-				if(check_start != OP_START)
-					locctr = LOCCTR(last_line, locctr,c);
+                objectcode(line);
+				// if(line.code == OP_START){
+				// 	locctr = strtol(line.operand1, NULL, 16);
+				// }
+				// if(check_start != OP_START)
+				// 	locctr = LOCCTR(last_line, locctr,c);
 
-				if(line.fmt == FMT4){
-					char temp[20];
-					strcpy(temp, "+");
-					strcat(temp,line.op);
-					strcpy(line.op, temp);
-				}
+				// if(line.fmt == FMT4){
+				// 	char temp[20];
+				// 	strcpy(temp, "+");
+				// 	strcat(temp,line.op);
+				// 	strcpy(line.op, temp);
+				// }
 
-				if(line.addressing == ADDR_IMMEDIATE){
-					char temp[20];
-					strcpy(temp, "#");
-					strcat(temp,line.operand1);
-					strcpy(line.operand1, temp);
-				}
+				// if(line.addressing == ADDR_IMMEDIATE){
+				// 	char temp[20];
+				// 	strcpy(temp, "#");
+				// 	strcat(temp,line.operand1);
+				// 	strcpy(line.operand1, temp);
+				// }
 
-				if(line.addressing == ADDR_INDIRECT){
-					char temp[20];
-					strcpy(temp, "@");
-					strcat(temp,line.operand1);
-					strcpy(line.operand1, temp);
-				}
+				// if(line.addressing == ADDR_INDIRECT){
+				// 	char temp[20];
+				// 	strcpy(temp, "@");
+				// 	strcat(temp,line.operand1);
+				// 	strcpy(line.operand1, temp);
+				// }
 
-				if(c == LINE_ERROR)
-					printf("%03d : 	 Error\n", line_count);
-				else if(c == LINE_COMMENT)
-					printf("%-03d :  Comment line\n", line_count);
-				else if(line.code == OP_END)
-					printf("%-03d :         %-12s %-12s %-12s \n", line_count, line.symbol, line.op, line.operand1);
-				else if (strlen(line.operand2) == 0)
-					printf("%-03d :  %06X %-12s %-12s %-12s \n", line_count,locctr, line.symbol, line.op, line.operand1);
-				else{
-					strcat(line.operand1,",");
-					strcat(line.operand1,line.operand2);
-					printf("%-03d :  %06X %-12s %-12s %-12s \n", line_count,locctr, line.symbol, line.op, line.operand1);
-				}
-					
+				// if(c == LINE_ERROR)
+				// 	printf("%03d : 	 Error\n", line_count);
+				// else if(c == LINE_COMMENT)
+				// 	printf("%-03d :  Comment line\n", line_count);
+				// else if(line.code == OP_END)
+				// 	printf("%-03d :         %-12s %-12s %-12s %X %d\n", line_count, line.symbol, line.op, line.operand1,line.code,line.code);
+				// else if (strlen(line.operand2) == 0)
+				// 	printf("%-03d :  %06X %-12s %-12s %-12s %X %d\n", line_count,locctr, line.symbol, line.op, line.operand1,line.code,line.code);
+				// else{
+				// 	strcat(line.operand1,",");
+				// 	strcat(line.operand1,line.operand2);
+				// 	printf("%-03d :  %06X %-12s %-12s %-12s %X %d\n", line_count,locctr, line.symbol, line.op, line.operand1,line.code,line.code);
+				// }
+				
 
-				if(line.code == OP_START){
-					start = locctr;
-				}else if(line.code == OP_END){
-					end = locctr;
-				}
-				if(strlen(line.symbol) > 1 && c == LINE_CORRECT){
-					strcpy(SYMTAB[symtab_index].label, line.symbol);
-					SYMTAB[symtab_index].locctr = locctr;
-					symtab_index++;
-				}
-				check_start = line.code;
-				last_line = line;
+				// if(line.code == OP_START){
+				// 	start = locctr;
+				// }else if(line.code == OP_END){
+				// 	end = locctr;
+				// }
+				// if(strlen(line.symbol) > 1 && c == LINE_CORRECT){
+				// 	strcpy(SYMTAB[symtab_index].label, line.symbol);
+				// 	SYMTAB[symtab_index].locctr = locctr;
+				// 	symtab_index++;
+				// }
+				// check_start = line.code;
+				// last_line = line;
+
+
 			}
-			
-			printf("Program length = %x\n",end - start);
+			printf(".\n");
+			printf(".\n");
+			printf("Program length = %06x\n",end - start);
 			for(int i = 0 ; i < symtab_index; i++){
 				printf("%12s %06X\n",SYMTAB[i].label,SYMTAB[i].locctr);
 			}
