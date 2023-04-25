@@ -360,7 +360,8 @@ int main(int argc, char *argv[])
 				check_start = line.code;
 				last_line = line;
 			}
-			
+			printf(".\n");
+			printf(".\n");
 			printf("Program length = %x\n",end - start);
 			for(int i = 0 ; i < symtab_index; i++){
 				printf("%12s %06X\n",SYMTAB[i].label,SYMTAB[i].locctr);
