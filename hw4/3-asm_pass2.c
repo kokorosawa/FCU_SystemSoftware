@@ -318,11 +318,21 @@ void objectcode(LINE line){
         }//n i x b p e
          //6 7 8 9 10 11
 
-        if(line.addressing == ADDR_SIMPLE){
-            ojc[6] = '1';
+		if(line.fmt == FMT1 && line.addressing == ADDR_INDEX){
+			ojc[6] = '0';
+            ojc[7] = '0';
+            ojc[8] = '1';
+		}
+        else if(line.fmt == FMT1){
+            ojc[6] = '0';
+            ojc[7] = '0';
+            ojc[8] = '0';
+        }else if(line.addressing == ADDR_SIMPLE){
+			ojc[6] = '1';
             ojc[7] = '1';
             ojc[8] = '0';
-        }else if(line.addressing == ADDR_IMMEDIATE){
+		}
+		else if(line.addressing == ADDR_IMMEDIATE){
             ojc[6] = '0';
             ojc[7] = '1';
             ojc[8] = '0';
@@ -357,8 +367,8 @@ int main(int argc, char *argv[])
 	SYMBOL		SYMTAB[100];
 	int symtab_index = 0;
 	int locctr = 0;
-	long start;
-	long end;
+	unsigned start;
+	unsigned end;
 
 	if(argc < 2)
 	{
