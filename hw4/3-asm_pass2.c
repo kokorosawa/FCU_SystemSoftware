@@ -287,7 +287,7 @@ int LOCCTR(LINE line,int locctr, int c){
 	return locctr;
 }
 
-
+char e = '0';
 
 void objectcode(LINE line){
     char ojc[32];
@@ -318,42 +318,44 @@ void objectcode(LINE line){
         }//n i x b p e
          //6 7 8 9 10 11
 
-		if(line.fmt == FMT1 && line.addressing == ADDR_INDEX){
-			ojc[6] = '0';
-            ojc[7] = '0';
-            ojc[8] = '1';
-		}
-        else if(line.fmt == FMT1){
-            ojc[6] = '0';
-            ojc[7] = '0';
-            ojc[8] = '0';
-        }else if(line.addressing == ADDR_SIMPLE){
+		if(line.addressing == ADDR_SIMPLE){
 			ojc[6] = '1';
             ojc[7] = '1';
             ojc[8] = '0';
+			ojc[9] = '0';
+			ojc[10] = '1';
 		}
 		else if(line.addressing == ADDR_IMMEDIATE){
             ojc[6] = '0';
             ojc[7] = '1';
             ojc[8] = '0';
+			ojc[9] = '0';
+			ojc[10] = '1';
         }else if(line.addressing == ADDR_INDIRECT){
             ojc[6] = '1';
             ojc[7] = '0';
             ojc[8] = '0';
+			ojc[9] = '0';
+			ojc[10] = '1';
         }else if(line.addressing == ADDR_INDEX){
             ojc[6] = '1';
             ojc[7] = '1';
             ojc[8] = '1';
+			ojc[9] = '0';
+			ojc[10] = '1';
         }else{
             ojc[6] = '0';
             ojc[7] = '0';
             ojc[8] = '0';
+			ojc[9] = '0';
+			ojc[10] = '1';
         }
         
+		
 
         ojc[9] = '\0';
         // printf("%d%d  %s %02x\n",hex[0],hex[1], ojc, line.addressing);
-        printf("%s %02x\n", ojc, line.addressing);
+        printf("%s AM:%02x FMT:%x\n", ojc, line.addressing,line.fmt);
 
     }
 }
