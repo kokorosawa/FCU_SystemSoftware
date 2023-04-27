@@ -3,22 +3,21 @@
   "tasks": [
     {
       "type": "cppbuild",
-      "label": "C/C++: clang 建置使用中檔案",
-      "command": "/usr/bin/clang",
+      "label": "C/C++: gcc.exe 建置使用中檔案",
+      "command": "C:\\mingw64\\bin\\gcc.exe",
       "args": [
-        "-fcolor-diagnostics",
-        "-fansi-escape-codes",
+        "-fdiagnostics-color=always",
         "-g",
         "${file}",
         "-o",
-        "${fileDirname}/${fileBasenameNoExtension}"
+        "${fileDirname}\\${fileBasenameNoExtension}.exe"
       ],
       "options": {
         "cwd": "${fileDirname}"
       },
       "problemMatcher": ["$gcc"],
       "group": "build",
-      "detail": "編譯器: /usr/bin/clang"
+      "detail": "編譯器: C:\\mingw64\\bin\\gcc.exe"
     }
   ]
 }
