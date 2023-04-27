@@ -229,7 +229,7 @@ int process_line(LINE *line)
 							}
 							else if((c == 1) && (buf[0] == 'x' || buf[0] == 'X'))
 							{
-								line->addressing =  ADDR_INDEX;
+								line->addressing = line->addressing | ADDR_INDEX;
                                 // printf("ADDR_INDEX");
 								ret = LINE_CORRECT;
 								state = 7;		/* skip following tokens in the line */
@@ -287,10 +287,15 @@ int LOCCTR(LINE line,int locctr, int c){
 	return locctr;
 }
 
-char e = '0';
+char b = '0';
+unsigned locctr_store[1000];
+int symtab_index = 0;
+SYMBOL	SYMTAB[100];
+LINE line_store[1000];
+int line_store_idx = 1;
 
-void objectcode(LINE line){
-    char ojc[32];
+void objectcode(LINE line,int i){
+    char ojc[8];
     unsigned tempcode = line.code;
     if(line.code == OP_RESB || line.code == OP_RESW || line.code == OP_BASE 
     || line.code == OP_NOBASE || line.code == OP_START || line.code == OP_END){
@@ -298,67 +303,83 @@ void objectcode(LINE line){
     }
     else if(line.code == OP_WORD || line.code == OP_BYTE){
         ojc[0] = '\0';
-    }else{
-        int hex[2];
+    }else if(line.fmt == FMT3){
+		int ojc_idx_1;
+		int ojc_idx_2;
+		ojc[6] = '\0';
         char set[] = "0123456789ABCDEF";
-        hex[0] = tempcode/16;
-        tempcode = tempcode % 16;
-        hex[1] = tempcode;
-        
-        int hexfirst = hex[0];
-        for(int i = 3; i >= 0; i--){
-            ojc[i] = set[hexfirst % 2];
-            hexfirst /= 2;
-        }
 
-        int hexsec = hex[1];
-        for(int i = 7; i >= 4; i--){
-            ojc[i] = set[hexsec % 2];
-            hexsec /= 2;
-        }//n i x b p e
-         //6 7 8 9 10 11
+		ojc[0] = set[line.code / 16];
+		
+		ojc_idx_1 = line.code % 16;
 
 		if(line.addressing == ADDR_SIMPLE){
-			ojc[6] = '1';
-            ojc[7] = '1';
-            ojc[8] = '0';
-			ojc[9] = '0';
-			ojc[10] = '1';
+			ojc_idx_1 += 3;
+			ojc_idx_2 += 2;
+			// ojc[6] = '1';
+            // ojc[7] = '1';
+         printf("%s %d\n", line_store[i].op,line_store_idx);   // ojc[8] = '0';
+			// ojc[9] = '0';
+			// ojc[10] = '1';
 		}
 		else if(line.addressing == ADDR_IMMEDIATE){
-            ojc[6] = '0';
-            ojc[7] = '1';
-            ojc[8] = '0';
-			ojc[9] = '0';
-			ojc[10] = '1';
+			ojc_idx_1 += 1;
+			ojc_idx_2 += 2;
+            // ojc[6] = '0';
+            // ojc[7] = '1';
+            // ojc[8] = '0';
+			// ojc[9] = '0';
+			// ojc[10] = '1';
         }else if(line.addressing == ADDR_INDIRECT){
-            ojc[6] = '1';
-            ojc[7] = '0';
-            ojc[8] = '0';
-			ojc[9] = '0';
-			ojc[10] = '1';
-        }else if(line.addressing == ADDR_INDEX){
-            ojc[6] = '1';
-            ojc[7] = '1';
-            ojc[8] = '1';
-			ojc[9] = '0';
-			ojc[10] = '1';
+			ojc_idx_1 += 2;
+			ojc_idx_2 += 0;
+            // ojc[6] = '1';
+            // ojc[7] = '0';
+            // ojc[8] = '0';
+			// ojc[9] = '0';
+			// ojc[10] = '0';
+        }else if(line.addressing >= ADDR_INDEX){
+			ojc_idx_1 += 3;
+			ojc_idx_2 += 2;
+            // ojc[6] = '1';
+            // ojc[7] = '1';
+            // ojc[8] = '1';
+			// ojc[9] = '0';
+			// ojc[10] = '1';
         }else{
-            ojc[6] = '0';
-            ojc[7] = '0';
-            ojc[8] = '0';
-			ojc[9] = '0';
-			ojc[10] = '1';
+			ojc_idx_1 += 0;
+			ojc_idx_2 += 2;
+            // ojc[6] = '0';
+            // ojc[7] = '0';
+            // ojc[8] = '0';
+			// ojc[9] = '0';
+			// ojc[10] = '1';
         }
-        
+		if(line.fmt == FMT4){
+			ojc_idx_2 += 1;
+		}
 		
+		ojc[1] = set[ojc_idx_1];
+		ojc[2] = set[ojc_idx_2];
 
-        ojc[9] = '\0';
-        // printf("%d%d  %s %02x\n",hex[0],hex[1], ojc, line.addressing);
-        printf("%s AM:%02x FMT:%x\n", ojc, line.addressing,line.fmt);
+		unsigned pc = locctr_store[i + 1];
+		unsigned target = 0;
+		for(int i = 0 ; i < symtab_index; i++){
+			if(strcmp(SYMTAB[i].label, line.operand1) == 0)
+				target = SYMTAB[i].locctr;
+		}
+		unsigned disp = target - pc;
+		unsigned temp = disp;
+		ojc[3] = set[disp / 256];
+		disp = disp / 256;
+		ojc[4] = set[disp / 16];
+		ojc[5] = set[disp % 16];
 
+       printf("%s %d\n",ojc,temp);
     }
 }
+
+
 
 int main(int argc, char *argv[])
 {
@@ -366,11 +387,10 @@ int main(int argc, char *argv[])
 	char		buf[LEN_SYMBOL];
 	LINE		line;
 	LINE 		last_line;
-	SYMBOL		SYMTAB[100];
-	int symtab_index = 0;
 	int locctr = 0;
 	unsigned start;
 	unsigned end;
+	int locctr_store_len;
 
 	if(argc < 2)
 	{
@@ -384,13 +404,18 @@ int main(int argc, char *argv[])
 		{	unsigned check_start;
 			for(line_count = 1 ; (c = process_line(&line)) != LINE_EOF; line_count++)
 			{	
-                objectcode(line);
-				// if(line.code == OP_START){
-				// 	locctr = strtol(line.operand1, NULL, 16);
-				// }
-				// if(check_start != OP_START)
-				// 	locctr = LOCCTR(last_line, locctr,c);
+                
+				if(line.code == OP_START){
+					locctr = strtol(line.operand1, NULL, 16);
+				}
+				if(check_start != OP_START)
+					locctr = LOCCTR(last_line, locctr,c);
 
+				locctr_store[line_count] = locctr;
+				// printf("%06X      ",locctr);
+				// printf("\n");
+
+				
 				// if(line.fmt == FMT4){
 				// 	char temp[20];
 				// 	strcpy(temp, "+");
@@ -425,30 +450,50 @@ int main(int argc, char *argv[])
 				// 	strcat(line.operand1,line.operand2);
 				// 	printf("%-03d :  %06X %-12s %-12s %-12s %X %d\n", line_count,locctr, line.symbol, line.op, line.operand1,line.code,line.code);
 				// }
+				// line_store[i].addressing = line.addressing;
+				// line_store[i].code = line.code;
+				// line_store[i].fmt = line.fmt;
+				strcpy(line_store[i].op, line.op);
 				
+				// strcpy(line_store[i].operand1, line.operand1);
+				// strcpy(line_store[i].operand2, line.operand2);
+				// strcpy(line_store[i].symbol, line.symbol);
+				line_store_idx++;
 
-				// if(line.code == OP_START){
-				// 	start = locctr;
-				// }else if(line.code == OP_END){
-				// 	end = locctr;
-				// }
-				// if(strlen(line.symbol) > 1 && c == LINE_CORRECT){
-				// 	strcpy(SYMTAB[symtab_index].label, line.symbol);
-				// 	SYMTAB[symtab_index].locctr = locctr;
-				// 	symtab_index++;
-				// }
-				// check_start = line.code;
-				// last_line = line;
+				if(line.code == OP_START){
+					start = locctr;
+				}else if(line.code == OP_END){
+					end = locctr;
+				}
+				if(strlen(line.symbol) > 1 && c == LINE_CORRECT){
+					strcpy(SYMTAB[symtab_index].label, line.symbol);
+					SYMTAB[symtab_index].locctr = locctr;
+					symtab_index++;
+				}
+				check_start = line.code;
+				last_line = line;
 
+				locctr_store_len = line_count;
 
+				printf("%s %d\n", line_store[i].op,line_store_idx);
 			}
-			printf(".\n");
-			printf(".\n");
-			printf("Program length = %06x\n",end - start);
-			for(int i = 0 ; i < symtab_index; i++){
-				printf("%12s %06X\n",SYMTAB[i].label,SYMTAB[i].locctr);
-			}
+			printf("%s %d\n", line_store[2].op,line_store_idx);
+			// printf(".\n");
+			// printf(".\n");
+			// printf("Program length = %06x\n",end - start);
+			// for(int i = 0 ; i < symtab_index; i++){
+			// 	printf("%12s %06X\n",SYMTAB[i].label,SYMTAB[i].locctr);
+			// }
+
+			// for(int i = 1; i <= locctr_store_len; i++){
+			// 	printf("%06X\n",locctr_store[i]);
+			// }
 			ASM_close();
+			// for(line_count = 1; line_count < line_store_idx; line_count++)
+			// {
+			// 	// objectcode(line, line_count);
+			// 	printf("%s %d\n",line_store[line_count].op, line_count);
+			// }
 		}
 	}
 }
