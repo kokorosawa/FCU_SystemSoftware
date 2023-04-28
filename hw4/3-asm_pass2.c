@@ -299,6 +299,7 @@ void objectcode(LINE line,int line_idx){
 	printf("%d\n",line_idx);
     char ojc[8];
     unsigned tempcode = line.code;
+	char set[] = "0123456789ABCDEF";
 	if(line.code == 0x68){
 		if(line.addressing == ADDR_IMMEDIATE){
 			for(int i = 0 ; i < symtab_index; i++){
@@ -318,12 +319,18 @@ void objectcode(LINE line,int line_idx){
     else if(line.code == OP_WORD || line.code == OP_BYTE){
         ojc[0] = '\0';
 	
-    }else{
+    }else if(line.fmt == FMT2){
+		ojc[4] = '\0';
+        
+		
+		ojc[0] = set[line.code / 16];
+		ojc[1] = set[line.code % 16];
+		ojc[2] = 
+	}else{
 		
 		int ojc_idx_1 = 0;
 		int ojc_idx_2 = 0;
 		ojc[6] = '\0';
-        char set[] = "0123456789ABCDEF";
 
 		ojc[0] = set[line.code / 16];
 		
@@ -376,8 +383,6 @@ void objectcode(LINE line,int line_idx){
 		
 		if(line.addressing == ADDR_SIMPLE && line.fmt == FMT3){
 			
-
-			
 			unsigned pc = locctr_store[line_idx + 1];
 			unsigned target = 0;
 			for(int i = 0 ; i < symtab_index; i++){
@@ -388,9 +393,16 @@ void objectcode(LINE line,int line_idx){
 			}
 			unsigned disp = target - pc;
 			unsigned temp = disp;
+			unsigned b_disp = target - b_add;
 			// printf("%d %d\n",disp,line_idx);
-			if(-2048 >= disp && disp >= 2047)
+			if (line.code == 0x4C){
+				ojc_idx_1 = line.code % 16 + 3;
+				temp = 0;
+				ojc_idx_2 = 0;
+			}else if(-2048 >= disp && disp >= 2047){
 				ojc_idx_2 += 2;
+				temp = b_disp;
+			} 
 
 			ojc[1] = set[ojc_idx_1];
 			ojc[2] = set[ojc_idx_2];
@@ -400,7 +412,7 @@ void objectcode(LINE line,int line_idx){
 			temp /= 16;
 			ojc[3] = set[temp % 16];
 
-			printf("%s %d %x %x\n",ojc,disp,line.addressing,line.fmt);
+			printf("%s %d  %d %x %x %x\n",ojc,disp, b_disp,line.code,line.addressing,line.fmt);
 			// printf("%s %x %x %x %d %d\n",ojc,target,pc,target - pc,disp,line_idx);
 		}
 		
