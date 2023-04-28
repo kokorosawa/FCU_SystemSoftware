@@ -295,6 +295,8 @@ SYMBOL	SYMTAB[100];
 LINE line_store[1000];
 int line_store_idx = 1;
 
+
+
 void objectcode(LINE line,int line_idx){
 	printf("%d\n",line_idx);
     char ojc[8];
@@ -321,11 +323,56 @@ void objectcode(LINE line,int line_idx){
 	
     }else if(line.fmt == FMT2){
 		ojc[4] = '\0';
-        
-		
-		ojc[0] = set[line.code / 16];
+        ojc[0] = set[line.code / 16];
 		ojc[1] = set[line.code % 16];
-		ojc[2] = 
+
+		
+		char res;
+		if(strcmp(line.operand1, "A") == 0){
+			res = '0';
+		}else if(strcmp(line.operand1, "X") == 0){
+			res = '1';
+		}else if(strcmp(line.operand1, "L") == 0){
+			res = '2';
+		}else if(strcmp(line.operand1, "PC") == 0){
+			res = '8';
+		}else if(strcmp(line.operand1, "SW") == 0){
+			res = '9';
+		}else if(strcmp(line.operand1, "B") == 0){
+			res = '3';
+		}else if(strcmp(line.operand1, "S") == 0){
+			res = '4';
+		}else if(strcmp(line.operand1, "T") == 0){
+			res = '5';
+		}else if(strcmp(line.operand1, "F") == 0){
+			res = '6';
+		}else
+			res = '0';
+		ojc[2] = res;
+
+
+		if(strcmp(line.operand2, "A") == 0){
+			res = '0';
+		}else if(strcmp(line.operand2, "X") == 0){
+			res = '1';
+		}else if(strcmp(line.operand2, "L") == 0){
+			res = '2';
+		}else if(strcmp(line.operand2, "PC") == 0){
+			res = '8';
+		}else if(strcmp(line.operand2, "SW") == 0){
+			res = '9';
+		}else if(strcmp(line.operand2, "B") == 0){
+			res = '3';
+		}else if(strcmp(line.operand2, "S") == 0){
+			res = '4';
+		}else if(strcmp(line.operand2, "T") == 0){
+			res = '5';
+		}else if(strcmp(line.operand2, "F") == 0){
+			res = '6';
+		}else
+			res = '0';
+		ojc[3] = res;
+		printf("%s  %x %x %x\n",ojc,line.code,line.addressing,line.fmt);
 	}else{
 		
 		int ojc_idx_1 = 0;
