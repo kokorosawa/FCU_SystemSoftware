@@ -349,8 +349,13 @@ void objectcode(LINE line,int line_idx){
 			ojc[5] = set[temp % 16];
 			ojc[6] = '\0';
 			printf("%s   %d\n",ojc, line_idx);
+		}else{
+			ojc[0] = line.operand1[2];
+			ojc[1] = line.operand1[3];
+			ojc[2] = '\0';
+			printf("%s       %d\n",ojc, line_idx);
 		}
-	
+		
     }else if(line.fmt == FMT2){
 		ojc[4] = '\0';
         ojc[0] = set[line.code / 16];
@@ -439,7 +444,7 @@ void objectcode(LINE line,int line_idx){
 			// ojc[10] = '1';
         }else if(line.addressing >= ADDR_INDEX){
 			ojc_idx_1 += 3;
-			ojc_idx_2 += 2;
+			ojc_idx_2 += 10;
             // ojc[6] = '1';
             // ojc[7] = '1';
             // ojc[8] = '1';
@@ -541,16 +546,19 @@ void objectcode(LINE line,int line_idx){
 		}else if(line.addressing == ADDR_IMMEDIATE){
 			if(line.code == 0x68){
 				unsigned target;
-				
+				ojc_idx_2 = 2;
 				unsigned pc = locctr_store[line_idx + 2];
 				unsigned disp = b_add - pc;
 				unsigned temp = disp;
+
 				ojc[5] = set[temp % 16];
 				temp /= 16;
 				ojc[4] = set[temp % 16];
 				temp /= 16;
 				ojc[3] = set[temp % 16];
 				ojc[6] = '\0';
+				ojc[1] = set[ojc_idx_1];
+				ojc[2] = set[ojc_idx_2];
 				printf("%s   %d\n",ojc, line_idx);
 			}else{
 				ojc[1] = set[ojc_idx_1];
@@ -594,14 +602,35 @@ void objectcode(LINE line,int line_idx){
 			ojc[3] = set[temp % 16];
 
 			printf("%s   %d\n",ojc, line_idx);
+		}else if(line.addressing >= ADDR_INDEX){
+			unsigned pc = locctr_store[line_idx + 1];
+			unsigned target = 0;
+			for(int i = 0 ; i < symtab_index; i++){
+				if(strcmp(SYMTAB[i].label, line.operand1) == 0){
+					target = SYMTAB[i].locctr;
+					break;
+				}
+			}
+			unsigned disp = target - pc;
+			unsigned temp = disp;
+			unsigned b_disp = target - b_add;
+			if(-2048 >= disp && disp >= 2047){
+				ojc_idx_2 += 2;
+				temp = b_disp;
+			}
+			ojc[1] = set[ojc_idx_1];
+			ojc[2] = set[ojc_idx_2];
+			ojc[5] = set[temp % 16];
+			temp /= 16;
+			ojc[4] = set[temp % 16];
+			temp /= 16;
+			ojc[3] = set[temp % 16];
+			printf("%s   %d\n",ojc,line_idx);
 		}
+			
 		
-		// ojc[3] = set[disp / 256];
-		// disp = disp / 256;
-		// ojc[4] = set[disp / 16];
-		// ojc[5] = set[disp % 16];
-
-       	// printf("%s %d\n",ojc,line_idx);
+		
+		
     }
 }
 
@@ -676,18 +705,15 @@ int main(int argc, char *argv[])
 				// 	strcat(line.operand1,line.operand2);
 				// 	printf("%-03d :  %06X %-12s %-12s %-12s %X %d\n", line_count,locctr, line.symbol, line.op, line.operand1,line.code,line.code);
 				// }
-				if(c != LINE_COMMENT || c != LINE_COMMENT){
-					line_store[line_count].addressing = line.addressing;
-					line_store[line_count].code = line.code;
-					line_store[line_count].fmt = line.fmt;
-					// printf("%x",line_store[line_count].fmt);
-					strcpy(line_store[line_count].op, line.op);
-					strcpy(line_store[line_count].operand1, line.operand1);
-					strcpy(line_store[line_count].operand2, line.operand2);
-					strcpy(line_store[line_count].symbol, line.symbol);
-					line_store_idx++;
-				}
 				
+					// line_store[line_count].addressing = line.addressing;
+					// line_store[line_count].code = line.code;
+					// line_store[line_count].fmt = line.fmt;
+					// strcpy(line_store[line_count].op, line.op);
+					// strcpy(line_store[line_count].operand1, line.operand1);
+					// strcpy(line_store[line_count].operand2, line.operand2);
+					// strcpy(line_store[line_count].symbol, line.symbol);
+					// line_store_idx++;
 
 				if(line.code == OP_START){
 					start = locctr;
@@ -717,19 +743,20 @@ int main(int argc, char *argv[])
 			// for(int i = 1; i <= locctr_store_len; i++){
 			// 	printf("%06X\n",locctr_store[i]);
 			// }
-			for(int line_count = 1; line_count < line_store_idx; line_count++)
-			{	
-				// printf("%d\n",line_count);
-				objectcode(line_store[line_count], line_count);
-				// printf("pass2 %d\n",line_count);
-				// printf("%-03d :  %06X %-12s %-12s %-12s %X\n",line_count,locctr_store[line_count],
-				// line_store[line_count].op,line_store[line_count].operand1 ,line_store[line_count].operand2
-				// ,line_store[line_count].addressing);
-
-
-				
+			// for(int line_count = 1; line_count < line_store_idx; line_count++)
+			// {	
+			// 	// printf("%d\n",line_count);
+			// 	objectcode(line_store[line_count], line_count);
+			// 	// printf("pass2 %d\n",line_count);
+			// 	// printf("%-03d :  %06X %-12s %-12s %-12s %X\n",line_count,locctr_store[line_count],
+			// 	// line_store[line_count].op,line_store[line_count].operand1 ,line_store[line_count].operand2
+			// 	// ,line_store[line_count].addressing);
+			// }
+			ASM_open(argv[1]);
+			for(line_count = 1 ; (c = process_line(&line)) != LINE_EOF; line_count++){
+				if(c == LINE_CORRECT)
+					objectcode(line, line_count);
 			}
-			printf("---------------------------------------------------------\n");
 			ASM_close();
 			
 		}
