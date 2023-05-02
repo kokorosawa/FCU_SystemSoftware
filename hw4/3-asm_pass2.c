@@ -299,6 +299,8 @@ int ojc_buffer_idx = 0;
 int reswbendl = 0;
 char lastojc[9];
 unsigned headlocctr;
+char m[50][10];
+int m_len = 0;
 
 
 void objectcode(LINE line,int line_idx){
@@ -498,6 +500,24 @@ void objectcode(LINE line,int line_idx){
 				ojc_idx_2 -= 2;
 				ojc[2] = set[ojc_idx_2];
 				ojc[8] = '\0';
+
+				int temp_locctr = locctr_store[line_idx] + 1;
+				m[m_len][0] = 'M';
+				m[m_len][6] = set[temp_locctr % 16];
+				temp_locctr /= 16;
+				m[m_len][5] = set[temp_locctr % 16];
+				temp_locctr /= 16;
+				m[m_len][4] = set[temp_locctr % 16];
+				temp_locctr /= 16;
+				m[m_len][3] = set[temp_locctr % 16];
+				temp_locctr /= 16;
+				m[m_len][2] = set[temp_locctr % 16];
+				temp_locctr /= 16;
+				m[m_len][1] = set[(temp_locctr) % 16];
+				m[m_len][7] = '0';
+				m[m_len][8] = '5';
+				m[m_len][9] = '\0';
+				m_len++;
 				// printf("%s %d \n",ojc, line_idx);
 			}else if(line.addressing == ADDR_IMMEDIATE){
 				unsigned target = strtol(line.operand1,NULL,10);
@@ -795,6 +815,10 @@ int main(int argc, char *argv[])
 			printf("T%06X",headlocctr);
 			printf("%02X",ojc_buffer_idx/2,ojc_buffer_idx);
 			printf("%s\n",ojc_buffer);
+			for(int i = 0 ; i < m_len; i++){
+				printf("%s\n",m[i]);
+			}
+			printf("E%06X\n",start);
 			ASM_close();
 			
 		}
