@@ -167,3 +167,31 @@ int main(int argc, char *argv[])
 	}
 }
 */
+
+const char *sicxeOnly[] = {
+    "ADDR",
+    "CLEAR",
+    "COMPR",
+    "DIVR",
+    "LDB",
+    "LDS",
+    "LDT",
+    "MULR",
+    "RMO",
+    "SHIFTL",
+    "SHIFTR",
+    "STB",
+    "STS",
+    "STT",
+    "SUBR",
+    "TIXR"
+}; 
+
+unsigned isSicXeInstruction(const char *instruction) {
+    for (int i = 0; i < sizeof(sicxeOnly) / sizeof(sicxeOnly[0]); i++) {
+        if (strcmp(instruction, sicxeOnly[i]) == 0) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
